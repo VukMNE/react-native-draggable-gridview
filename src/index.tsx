@@ -2,113 +2,113 @@
  * react-native-draggable-gridview
  */
 
- import React, { memo, useRef, useState, useCallback } from 'react'
- import { Dimensions, LayoutRectangle } from 'react-native'
- import { View, ViewStyle, TouchableOpacity } from 'react-native'
- import { Animated, Easing, EasingFunction } from 'react-native'
- import { ScrollView, ScrollViewProps } from 'react-native'
- import { PanResponder, PanResponderInstance } from 'react-native'
- import _ from 'lodash'
- 
- const { width: screenWidth } = Dimensions.get('window')
- 
- interface GridViewProps extends ScrollViewProps {
-   numColumns?: number
-   containerMargin?: ContainerMargin
-   gridCellSize: GridCellSize
-   width?: number
-   data: any[]
-   activeOpacity?: number
-   delayLongPress?: number
-   selectedStyle?: ViewStyle
-   animationConfig?: AnimationConfig
-   keyExtractor?: (item: any) => string
-   renderItem: (item: any, index?: number) => JSX.Element
-   renderLockedItem?: (item: any, index?: number) => JSX.Element
-   locked?: (item: any, index?: number) => boolean
-   onBeginDragging?: (item: any, index?: number) => void
-   onPressCell?: (item: any, index?: number) => void
-   onReleaseCell?: (data: any[]) => void
-   onEndAddAnimation?: (item: any) => void
-   onEndDeleteAnimation?: (item: any) => void
- }
- 
- interface AnimationConfig {
-   isInteraction?: boolean
-   useNativeDriver: boolean
-   easing?: EasingFunction
-   duration?: number
-   delay?: number
- }
- 
- interface ContainerMargin {
-   top?: number
-   bottom?: number
-   left?: number
-   right?: number
- }
- 
- interface GridCellSize {
-   width: number
-   height: number
- }
- 
- interface Point {
-   x: number
-   y: number
- }
- 
- interface Item {
-   item: any
-   pos: Animated.ValueXY
-   opacity: Animated.Value
- }
- 
- interface State {
-   scrollView?: ScrollView
-   frame?: LayoutRectangle
-   contentOffset: number
-   numRows?: number
-   cellSize?: {width: number, height: number}
-   grid: Point[]
-   items: Item[]
-   animation?: Animated.CompositeAnimation
-   animationId?: number // Callback ID for requestAnimationFrame
-   startPoint?: Point // Starting position when dragging
-   startPointOffset?: number // Offset for the starting point for scrolling
-   move?: number // The position for dragging
-   panResponder?: PanResponderInstance
- }
- 
- const GridView = memo((props: GridViewProps) => {
-   const {
-     data,
-     keyExtractor,
-     renderItem,
-     renderLockedItem,
-     locked,
-     onBeginDragging,
-     onPressCell,
-     onReleaseCell,
-     onEndAddAnimation,
-     onEndDeleteAnimation,
-     ...rest
-   } = props
-   const numColumns = rest.numColumns || 1
-   const top = rest.containerMargin?.top || 0
-   const bottom = rest.containerMargin?.bottom || 0
-   const left = rest.containerMargin?.left || 0
-   const right = rest.containerMargin?.right || 0
-   const width = rest.width || screenWidth
-   const activeOpacity = rest.activeOpacity || 0.5
-   const delayLongPress = rest.delayLongPress || 500
-   const selectedStyle = rest.selectedStyle || {
-     shadowColor: '#000',
-     shadowRadius: 8,
-     shadowOpacity: 0.2,
-     elevation: 10,
-     transform: [{scale: 1.05}]
-   }
+import React, { memo, useRef, useState, useCallback } from 'react'
+import { Dimensions, LayoutRectangle } from 'react-native'
+import { View, ViewStyle, TouchableOpacity } from 'react-native'
+import { Animated, Easing, EasingFunction } from 'react-native'
+import { ScrollView, ScrollViewProps } from 'react-native'
+import { PanResponder, PanResponderInstance } from 'react-native'
+import _ from 'lodash'
+
+const { width: screenWidth } = Dimensions.get('window')
+
+interface GridViewProps extends ScrollViewProps {
+  numColumns?: number
+  containerMargin?: ContainerMargin
+  gridCellSize?: GridCellSize
+  width?: number
+  data: any[]
+  activeOpacity?: number
+  delayLongPress?: number
+  selectedStyle?: ViewStyle
+  animationConfig?: AnimationConfig
+  keyExtractor?: (item: any) => string
+  renderItem: (item: any, index?: number) => JSX.Element
+  renderLockedItem?: (item: any, index?: number) => JSX.Element
+  locked?: (item: any, index?: number) => boolean
+  onBeginDragging?: (item: any, index?: number) => void
+  onPressCell?: (item: any, index?: number) => void
+  onReleaseCell?: (data: any[]) => void
+  onEndAddAnimation?: (item: any) => void
+  onEndDeleteAnimation?: (item: any) => void
+}
+
+interface AnimationConfig {
+  isInteraction?: boolean
+  useNativeDriver: boolean
+  easing?: EasingFunction
+  duration?: number
+  delay?: number
+}
+
+interface ContainerMargin {
+  top?: number
+  bottom?: number
+  left?: number
+  right?: number
+}
+
+interface GridCellSize {
+  width: number
+  height: number
+}
+
+interface Point {
+  x: number
+  y: number
+}
+
+interface Item {
+  item: any
+  pos: Animated.ValueXY
+  opacity: Animated.Value
+}
+
+interface State {
+  scrollView?: ScrollView
+  frame?: LayoutRectangle
+  contentOffset: number
+  numRows?: number
+  cellSize?: {width: number, height: number}
+  grid: Point[]
+  items: Item[]
+  animation?: Animated.CompositeAnimation
+  animationId?: number // Callback ID for requestAnimationFrame
+  startPoint?: Point // Starting position when dragging
+  startPointOffset?: number // Offset for the starting point for scrolling
+  move?: number // The position for dragging
+  panResponder?: PanResponderInstance
+}
+
+const GridView = memo((props: GridViewProps) => {
+  const {
+    data,
+    keyExtractor,
+    renderItem,
+    renderLockedItem,
+    locked,
+    onBeginDragging,
+    onPressCell,
+    onReleaseCell,
+    onEndAddAnimation,
+    onEndDeleteAnimation,
+    ...rest
+  } = props
+  const numColumns = rest.numColumns || 1
+  const top = rest.containerMargin?.top || 0
+  const bottom = rest.containerMargin?.bottom || 0
+  const left = rest.containerMargin?.left || 0
+  const right = rest.containerMargin?.right || 0
+  const width = rest.width || screenWidth
+  const activeOpacity = rest.activeOpacity || 0.5
+  const delayLongPress = rest.delayLongPress || 500
+  const selectedStyle = rest.selectedStyle || {
+    shadowColor: '#000',
+    shadowRadius: 8,
+    shadowOpacity: 0.2,
+    elevation: 10,
+    transform: [{scale: 1.05}]
+  }
  
    const [selectedItem, setSelectedItem] = useState<Item | null>(null)
    const self = useRef<State>({
@@ -401,12 +401,12 @@
   const onMove = useCallback(
     (event, { moveY, dx, dy }: { moveY: number; dx: number; dy: number }) => {
       const { startPoint, startPointOffset, frame } = self
-        if(frame && startPoint && startPointOffset) {
+        if(frame && startPoint) {
         self.move = moveY - frame.y
         let { x, y } = startPoint
         // console.log('[GridView] onMove', dx, dy, moveY, x, y)
         x += dx
-        y += dy + startPointOffset
+        y += dy + ( startPointOffset ? startPointOffset : 0)
         if(selectedItem != null){
           selectedItem.pos.setValue({ x, y })
         }  
