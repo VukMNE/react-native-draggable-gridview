@@ -26,7 +26,7 @@ interface GridViewProps extends ScrollViewProps {
   renderItem: (item: any, index?: number) => JSX.Element
   renderLockedItem?: (item: any, index?: number) => JSX.Element
   locked?: (item: any, index?: number) => boolean
-  onBeginDragging?: () => void
+  onBeginDragging?: (item: any, index?: number) => void
   onPressCell?: (item: any, index?: number) => void
   onReleaseCell?: (data: any[]) => void
   onEndAddAnimation?: (item: any) => void
@@ -107,6 +107,7 @@ const GridView = memo((props: GridViewProps) => {
     shadowRadius: 8,
     shadowOpacity: 0.2,
     elevation: 10,
+    transform: [{scale: 1.05}]
   }
 
   const [selectedItem, setSelectedItem] = useState<Item>(null)
@@ -324,7 +325,7 @@ const GridView = memo((props: GridViewProps) => {
       self.startPoint = position
       self.startPointOffset = 0
       setSelectedItem(self.items[index])
-      onBeginDragging && onBeginDragging()
+      onBeginDragging && onBeginDragging(self.items[index], index)
     },
     [onBeginDragging]
   )
